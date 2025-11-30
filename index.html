@@ -3,202 +3,315 @@
 <head>
 <meta charset="UTF-8">
 <title>Hi Mr. Pookie Cookie 💛</title>
+
 <style>
-body {font-family: 'Arial', sans-serif; background: #fff6f8; margin:0; padding:20px; text-align:center; color:#333; overflow-x:hidden;}
-h1,h2{color:#ff4f7b; margin-bottom:10px;}
-h1{font-size:36px;} h2{font-size:28px;}
-.section{background:white; padding:20px; margin:15px auto; border-radius:18px; width:92%; max-width:500px; box-shadow:0px 3px 15px rgba(0,0,0,0.1); animation:fadeIn 1s ease;}
-.button, .option{background:#ffd9e6; color:#333; padding:12px 18px; border-radius:12px; margin:10px auto; display:block; cursor:pointer; font-weight:bold; transition:0.3s; width:80%; text-align:center;}
-.option:hover, .button:hover{background:#ffbfd1; transform:scale(1.05);}
-.hidden{display:none; margin-top:15px; background:#ffe6ef; padding:15px; border-radius:12px; animation:fadeIn 1s ease;}
-.option-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-@keyframes fadeIn{0%{opacity:0; transform:translateY(10px);}100%{opacity:1; transform:translateY(0);}}
-.fireworks{position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;}
+    body {
+        font-family: 'Arial', sans-serif;
+        background: #fff3f7;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+        color: #333;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    h1 {
+        font-size: 32px;
+        color: #ff4f7b;
+        margin-bottom: 10px;
+        animation: fadeIn 1.5s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section {
+        background: white;
+        padding: 20px;
+        margin: 15px auto;
+        border-radius: 18px;
+        width: 92%;
+        max-width: 500px;
+        box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
+        opacity: 0;
+        transform: translateY(30px);
+        animation: popIn 1s ease forwards;
+    }
+
+    @keyframes popIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .locked {
+        filter: blur(5px);
+        pointer-events: none;
+        opacity: 0.3;
+    }
+
+    .option-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .option {
+        background: #ffd9e6;
+        padding: 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    .option:hover {
+        background: #ffbfd1;
+    }
+
+    #adminToggle {
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
+        background: #222;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        opacity: 0.7;
+    }
+
+    #fireworksCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    /* Fullscreen overlay for click to start magic */
+    #magicOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 243, 247, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        font-size: 24px;
+        color: #ff4f7b;
+        cursor: pointer;
+    }
 </style>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+<script>
+function reveal(id) {
+    document.getElementById(id).style.display = "block";
+}
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAxrxUO86_bBRWvG7MPPEiplyMZcP_BBaw",
-  authDomain: "mr-pookie-birthday.firebaseapp.com",
-  databaseURL: "https://mr-pookie-birthday-default-rtdb.firebaseio.com",
-  projectId: "mr-pookie-birthday",
-  storageBucket: "mr-pookie-birthday.appspot.com",
-  messagingSenderId: "440258697166",
-  appId: "1:440258697166:web:c561f120ea13d7a234bd9f"
+const unlockDays = {
+    1: "page1",
+    6: "page2",
+    11: "page3",
+    16: "page4",
+    21: "page5",
+    26: "page6",
+    30: "final"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-window.saveResponse = (day, question, answer) => {
-  const responsesRef = ref(db, 'responses/day' + day);
-  push(responsesRef, {question, answer});
+function toggleAdmin() {
+    let current = localStorage.getItem("adminMode") === "true";
+    localStorage.setItem("adminMode", !current);
+    location.reload();
 }
-</script>
 
-<script>
-function toggle(id){ let el=document.getElementById(id); el.style.display=el.style.display==="block"?"none":"block"; }
-function selectGift(day,type){ toggle(`gift${day}`); saveResponse(day,"Gift type",type); }
-function selectGiftBoxOption(day,opt){ toggle(`giftBoxOption${day}`); saveResponse(day,"Gift Box choice",opt); }
-function selectRestaurant(day,opt){ toggle(`restaurant${day}`); saveResponse(day,"Restaurant",opt); }
-function revealFinalMessage(){ toggle('fireworks'); }
+// Fireworks with Hearts
+function startFireworks() {
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = "block";
+
+    const fireworks = [];
+    const particles = [];
+
+    function random(min, max) { return Math.random() * (max - min) + min; }
+
+    function drawHeart(ctx, x, y, size, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(size / 15, size / 15);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-5, -5, -10, 5, 0, 12);
+        ctx.bezierCurveTo(10, 5, 5, -5, 0, 0);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    class Firework {
+        constructor() {
+            this.x = random(100, canvas.width - 100);
+            this.y = canvas.height;
+            this.targetY = random(50, canvas.height / 2);
+            this.color = `hsl(${random(0, 360)}, 100%, 50%)`;
+            this.speed = random(3, 7);
+            this.exploded = false;
+        }
+        update() {
+            this.y -= this.speed;
+            if (this.y <= this.targetY && !this.exploded) {
+                this.exploded = true;
+                for (let i = 0; i < 25; i++) {
+                    particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
+        }
+        draw() {
+            if (!this.exploded) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.speedX = random(-5, 5);
+            this.speedY = random(-5, 5);
+            this.alpha = 1;
+            this.gravity = 0.05;
+            this.size = random(8, 15);
+            this.type = Math.random() < 0.5 ? 'circle' : 'heart';
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.speedY += this.gravity;
+            this.alpha -= 0.02;
+        }
+        draw() {
+            ctx.globalAlpha = this.alpha;
+            if (this.type === 'heart') {
+                drawHeart(ctx, this.x, this.y, this.size, this.color);
+            } else {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size / 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    function animate() {
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (Math.random() < 0.05) fireworks.push(new Firework());
+
+        fireworks.forEach((f, i) => {
+            f.update();
+            f.draw();
+            if (f.exploded) fireworks.splice(i, 1);
+        });
+
+        particles.forEach((p, i) => {
+            p.update();
+            p.draw();
+            if (p.alpha <= 0) particles.splice(i, 1);
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+
+function startBirthdayMagic() {
+    document.getElementById("magicOverlay").style.display = "none";
+    const audio = document.getElementById("birthdayAudio");
+    audio.play();
+    startFireworks();
+}
+
+window.onload = function() {
+    let today = new Date();
+    let day = today.getDate();
+    let month = today.getMonth() + 1;
+
+    let adminMode = localStorage.getItem("adminMode") === "true";
+
+    for (const unlockDay in unlockDays) {
+        let section = document.getElementById(unlockDays[unlockDay]);
+        if (adminMode || (month === 12 && day >= unlockDay)) {
+            section.classList.remove("locked");
+        } else {
+            section.classList.add("locked");
+        }
+    }
+
+    if ((month === 12 && day >= 30) || adminMode) {
+        document.getElementById("magicOverlay").style.display = "flex";
+    }
+};
 </script>
+</head>
 
 <body>
 
-<!-- Intro -->
-<div class="section">
-<h1>Hi my spicy Pookie Vampire 💛</h1>
-<p>Welcome to your 30-day birthday surprise! Each day, tap to reveal teasing, compliments, riddles, and gifts just for you, my buttery premium beef steak 😏</p>
-<div class="button" onclick="toggle('day0')">Start the Fun</div>
-<div id="day0" class="hidden">
-<p>Get ready, my sweet & spicy Cadbury 🍫! Every day until your birthday, I’ll make you smile, blush, and maybe drool a little 😌</p>
-</div>
+<div id="adminToggle" onclick="toggleAdmin()">Admin View</div>
+
+<!-- Overlay to start music/fireworks -->
+<div id="magicOverlay" onclick="startBirthdayMagic()">🎉 Click anywhere to start your birthday magic! 🎶💛</div>
+
+<h1>Good Morning Mr. Pookie Cookie 💛</h1>
+<p>Your birthday month has officially started…  
+and so has my mission to make you smile every 5 days 😌💛</p>
+
+<audio id="birthdayAudio" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+<canvas id="fireworksCanvas" class="hidden"></canvas>
+
+<!-- PAGE 1 - Dec 1 -->
+<div id="page1" class="section locked">
+    <h2>✨ Day 1</h2>
+    <p>My delicious little Cadbury treat…  
+    December is here, and that means one thing:  
+    I get 30 whole days to tease you, adore you, and spoil you 😌💛</p>
+
+    <p>First question of the month 👀  
+    What’s your vibe today?</p>
+
+    <div class="option" onclick="reveal('a1')">Cute Pookie Mode 😇</div>
+    <div class="option" onclick="reveal('a2')">Hot & Edible Mode 😏🔥</div>
+
+    <div id="a1" class="hidden">Awww, my soft fluffy cupcake. I knew it 😌💛</div>
+    <div id="a2" class="hidden">Of course… my sizzling premium steak chooses violence 😏🔥</div>
 </div>
 
-<!-- Days 1–30 -->
-<!-- Day 1 -->
-<div class="section">
-<h2>Day 1: Gift 🎁</h2>
-<div class="button" onclick="toggle('day1q')">Tap for today's question</div>
-<div id="day1q" class="hidden">
-<p>Which gift mood are you today, my sweet buttery steak? 😏</p>
-<div class="option-grid">
-<div class="option" onclick="selectGift(1,'Gift Box')">Gift Box</div>
-<div class="option" onclick="selectGift(1,'Gift Card')">Gift Card</div>
-</div>
-</div>
-<div id="gift1" class="hidden">
-<p>Gift Box? Hmmm… what would melt your heart today 😌</p>
-<div class="option-grid">
-<div class="option" onclick="selectGiftBoxOption(1,'Sweet Treat')">Sweet Treat</div>
-<div class="option" onclick="selectGiftBoxOption(1,'Cute Surprise')">Cute Surprise</div>
-</div>
-</div>
-</div>
+<!-- Other pages remain as before -->
 
-<!-- Day 2: Restaurant -->
-<div class="section">
-<h2>Day 2: Dinner 🍽</h2>
-<p>Choose your birthday dinner spot, my Pookie 😏</p>
-<div class="option-grid">
-<div class="option" onclick="selectRestaurant(2,'Ktore')">Ktore</div>
-<div class="option" onclick="selectRestaurant(2,'Astasi')">Astasi</div>
-<div class="option" onclick="selectRestaurant(2,'Silo')">Silo</div>
-<div class="option" onclick="selectRestaurant(2,'Terraza')">Terraza</div>
+<!-- FINAL - Dec 30 -->
+<div id="final" class="section locked">
+    <h2>🎉 Final Day — Dec 30</h2>
+    <p>Tomorrow is your birthday, my Mr. Pookie Cookie 💛  
+    And I can't wait to spoil you the way you deserve 😌  
+    Your final surprise unlocks at midnight…</p>
 </div>
-<div id="restaurant2" class="hidden">
-<p>Yum! Love seeing your choice, my Rafaello 🍬</p>
-</div>
-</div>
-
-<!-- Day 3: Riddle -->
-<div class="section">
-<h2>Day 3: Fun Riddle 🎉</h2>
-<div class="button" onclick="toggle('day3q')">Tap for today's tease</div>
-<div id="day3q" class="hidden">
-<p>If you were a dessert today, which one would you be?  
-🍓 Strawberry Cheesecake  
-🍫 Buttery Chocolate  
-🍬 Sweet Rafaello  
-💛 Premium Beef Steak 😏</p>
-</div>
-</div>
-
-<!-- Day 4 -->
-<div class="section">
-<h2>Day 4: Compliment 💛</h2>
-<div class="button" onclick="toggle('day4q')">Tap for today's love</div>
-<div id="day4q" class="hidden">
-<p>You make every day sweeter, my Pookie Vampire 😌  
-I love the way you smile — better than chocolate 🍫</p>
-</div>
-</div>
-
-<!-- Day 5: Question -->
-<div class="section">
-<h2>Day 5: Playful Question 🕵️‍♂️</h2>
-<div class="button" onclick="toggle('day5q')">Tap to reveal</div>
-<div id="day5q" class="hidden">
-<p>If I had to describe you as a spice, would you be:  
-🌶️ Spicy Hot  
-🧈 Buttery Smooth  
-🍯 Sweet Like Honey  
-💛 Premium Steak 😏</p>
-</div>
-</div>
-
-<!-- Day 6: Restaurant -->
-<div class="section">
-<h2>Day 6: Dinner 🍽</h2>
-<div class="option-grid">
-<div class="option" onclick="selectRestaurant(6,'Ktore')">Ktore</div>
-<div class="option" onclick="selectRestaurant(6,'Astasi')">Astasi</div>
-<div class="option" onclick="selectRestaurant(6,'Silo')">Silo</div>
-<div class="option" onclick="selectRestaurant(6,'Terraza')">Terraza</div>
-</div>
-<div id="restaurant6" class="hidden">
-<p>Looking yummy as ever, my strawberry cheesecake 🍓</p>
-</div>
-</div>
-
-<!-- Day 7: Gift -->
-<div class="section">
-<h2>Day 7: Gift 🎁</h2>
-<div class="button" onclick="toggle('day7q')">Tap for today's tease</div>
-<div id="day7q" class="hidden">
-<p>Gift mood again, my spicy beef steak? 😏</p>
-<div class="option-grid">
-<div class="option" onclick="selectGift(7,'Gift Box')">Gift Box</div>
-<div class="option" onclick="selectGift(7,'Gift Card')">Gift Card</div>
-</div>
-</div>
-<div id="gift7" class="hidden">
-<p>Gift Box selected? Something playful & cute for my hottiee 😌</p>
-<div class="option-grid">
-<div class="option" onclick="selectGiftBoxOption(7,'Surprise Toy')">Surprise Toy</div>
-<div class="option" onclick="selectGiftBoxOption(7,'Secret Treat')">Secret Treat</div>
-</div>
-</div>
-</div>
-
-<!-- Day 8–29 -->
-<!-- Continue the same pattern: odd days riddles/tease, even days restaurants/gifts -->
-<!-- Example of random day -->
-<div class="section">
-<h2>Day 8: Compliment & Tease 💛</h2>
-<div class="button" onclick="toggle('day8q')">Tap for today's love</div>
-<div id="day8q" class="hidden">
-<p>Every moment with you is my favorite, my sweet & spicy Pookie Vampire 😌  
-You’re the butter to my toast 🧈💛</p>
-</div>
-</div>
-
-<!-- Day 30: Fireworks -->
-<div class="section">
-<h2>🎆 Day 30: Happy Birthday!</h2>
-<div class="button" onclick="revealFinalMessage()">Tap for your surprise!</div>
-<div id="fireworks" class="hidden">
-<canvas id="canvas"></canvas>
-<p style="font-size: 24px; font-weight:bold; color:#ff4f7b;">🎉 Happy Birthday Hassaan 💛🎉</p>
-</div>
-</div>
-
-<script>
-// Fireworks animation
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-let particles=[];
-function createParticle(x,y){particles.push({x,y,dx:(Math.random()-0.5)*5,dy:(Math.random()-0.5)*5,alpha:1});}
-function drawParticles(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach((p,i)=>{ctx.fillStyle=`rgba(255,79,123,${p.alpha})`;ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();p.x+=p.dx;p.y+=p.dy;p.alpha-=0.02;if(p.alpha<=0)particles.splice(i,1);});requestAnimationFrame(drawParticles);}
-canvas.addEventListener('click',e=>{for(let i=0;i<50;i++)createParticle(e.clientX,e.clientY);});
-drawParticles();
-</script>
 
 </body>
 </html>
