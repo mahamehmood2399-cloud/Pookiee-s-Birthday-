@@ -81,6 +81,7 @@
         cursor: pointer;
         font-size: 14px;
         opacity: 0.7;
+        z-index: 10000;
     }
 
     #fireworksCanvas {
@@ -93,337 +94,19 @@
         z-index: 9999;
     }
 
-    /* Fullscreen overlay for click to start magic */
-    #magicOverlay {
+    #playMagic {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 243, 247, 0.95);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-        font-size: 24px;
-        color: #ff4f7b;
-        cursor: pointer;
-    }
-</style>
-
-<script>
-function reveal(id) {
-    document.getElementById(id).style.display = "block";
-}
-
-const unlockDays = {
-    1: "page1",
-    6: "page2",
-    11: "page3",
-    16: "page4",
-    21: "page5",
-    26: "page6",
-    30: "final"
-};
-
-function toggleAdmin() {
-    let current = localStorage.getItem("adminMode") === "true";
-    localStorage.setItem("adminMode", !current);
-    location.reload();
-}
-
-// Fireworks with Hearts
-function startFireworks() {
-    const canvas = document.getElementById('fireworksCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvas.style.display = "block";
-
-    const fireworks = [];
-    const particles = [];
-
-    function random(min, max) { return Math.random() * (max - min) + min; }
-
-    function drawHeart(ctx, x, y, size, color) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(size / 15, size / 15);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(-5, -5, -10, 5, 0, 12);
-        ctx.bezierCurveTo(10, 5, 5, -5, 0, 0);
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.restore();
-    }
-
-    class Firework {
-        constructor() {
-            this.x = random(100, canvas.width - 100);
-            this.y = canvas.height;
-            this.targetY = random(50, canvas.height / 2);
-            this.color = `hsl(${random(0, 360)}, 100%, 50%)`;
-            this.speed = random(3, 7);
-            this.exploded = false;
-        }
-        update() {
-            this.y -= this.speed;
-            if (this.y <= this.targetY && !this.exploded) {
-                this.exploded = true;
-                for (let i = 0; i < 25; i++) {
-                    particles.push(new Particle(this.x, this.y, this.color));
-                }
-            }
-        }
-        draw() {
-            if (!this.exploded) {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-        }
-    }
-
-    class Particle {
-        constructor(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.color = color;
-            this.speedX = random(-5, 5);
-            this.speedY = random(-5, 5);
-            this.alpha = 1;
-            this.gravity = 0.05;
-            this.size = random(8, 15);
-            this.type = Math.random() < 0.5 ? 'circle' : 'heart';
-        }
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            this.speedY += this.gravity;
-            this.alpha -= 0.02;
-        }
-        draw() {
-            ctx.globalAlpha = this.alpha;
-            if (this.type === 'heart') {
-                drawHeart(ctx, this.x, this.y, this.size, this.color);
-            } else {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size / 3, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-    }
-
-    function animate() {
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        if (Math.random() < 0.05) fireworks.push(new Firework());
-
-        fireworks.forEach((f, i) => {
-            f.update();
-            f.draw();
-            if (f.exploded) fireworks.splice(i, 1);
-        });
-
-        particles.forEach((p, i) => {
-            p.update();
-            p.draw();
-            if (p.alpha <= 0) particles.splice(i, 1);
-        });
-
-        requestAnimationFrame(animate);
-    }
-
-    animate();
-}
-
-function startBirthdayMagic() {
-    document.getElementById("magicOverlay").style.display = "none";
-    const audio = document.getElementById("birthdayAudio");
-    audio.play();
-    startFireworks();
-}
-
-window.onload = function() {
-    let today = new Date();
-    let day = today.getDate();
-    let month = today.getMonth() + 1;
-
-    let adminMode = localStorage.getItem("adminMode") === "true";
-
-    for (const unlockDay in unlockDays) {
-        let section = document.getElementById(unlockDays[unlockDay]);
-        if (adminMode || (month === 12 && day >= unlockDay)) {
-            section.classList.remove("locked");
-        } else {
-            section.classList.add("locked");
-        }
-    }
-
-    if ((month === 12 && day >= 30) || adminMode) {
-        document.getElementById("magicOverlay").style.display = "flex";
-    }
-};
-</script>
-</head>
-
-<body>
-
-<div id="adminToggle" onclick="toggleAdmin()">Admin View</div>
-
-<!-- Overlay to start music/fireworks -->
-<div id="magicOverlay" onclick="startBirthdayMagic()">🎉 Click anywhere to start your birthday magic! 🎶💛</div>
-
-<h1>Good Morning Mr. Pookie Cookie 💛</h1>
-<p>Your birthday month has officially started…  
-and so has my mission to make you smile every 5 days 😌💛</p>
-
-<audio id="birthdayAudio" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
-<canvas id="fireworksCanvas" class="hidden"></canvas>
-
-<!-- PAGE 1 - Dec 1 -->
-<div id="page1" class="section locked">
-    <h2>✨ Day 1</h2>
-    <p>My delicious little Cadbury treat…  
-    December is here, and that means one thing:  
-    I get 30 whole days to tease you, adore you, and spoil you 😌💛</p>
-
-    <p>First question of the month 👀  
-    What’s your vibe today?</p>
-
-    <div class="option" onclick="reveal('a1')">Cute Pookie Mode 😇</div>
-    <div class="option" onclick="reveal('a2')">Hot & Edible Mode 😏🔥</div>
-
-    <div id="a1" class="hidden">Awww, my soft fluffy cupcake. I knew it 😌💛</div>
-    <div id="a2" class="hidden">Of course… my sizzling premium steak chooses violence 😏🔥</div>
-</div>
-
-<!-- Other pages remain as before -->
-
-<!-- FINAL - Dec 30 -->
-<div id="final" class="section locked">
-    <h2>🎉 Final Day — Dec 30</h2>
-    <p>Tomorrow is your birthday, my Mr. Pookie Cookie 💛  
-    And I can't wait to spoil you the way you deserve 😌  
-    Your final surprise unlocks at midnight…</p>
-</div>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Hi Mr. Pookie Cookie 💛</title>
-
-<style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background: #fff3f7;
-        margin: 0;
-        padding: 20px;
-        text-align: center;
-        color: #333;
-        overflow-x: hidden;
-        position: relative;
-    }
-
-    h1 {
-        font-size: 32px;
-        color: #ff4f7b;
-        margin-bottom: 10px;
-        animation: fadeIn 1.5s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .section {
-        background: white;
-        padding: 20px;
-        margin: 15px auto;
-        border-radius: 18px;
-        width: 92%;
-        max-width: 500px;
-        box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
-        opacity: 0;
-        transform: translateY(30px);
-        animation: popIn 1s ease forwards;
-    }
-
-    @keyframes popIn {
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .locked {
-        filter: blur(5px);
-        pointer-events: none;
-        opacity: 0.3;
-    }
-
-    .option-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-
-    .option {
-        background: #ffd9e6;
-        padding: 14px;
-        border-radius: 14px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-
-    .option:hover {
-        background: #ffbfd1;
-    }
-
-    #adminToggle {
-        position: fixed;
-        bottom: 15px;
+        bottom: 70px;
         right: 15px;
-        background: #222;
+        background: #ff4f7b;
         color: white;
         padding: 10px 15px;
         border-radius: 12px;
         cursor: pointer;
         font-size: 14px;
-        opacity: 0.7;
-    }
-
-    #fireworksCanvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 9999;
-    }
-
-    /* Fullscreen overlay for click to start magic */
-    #magicOverlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 243, 247, 0.95);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-        font-size: 24px;
-        color: #ff4f7b;
-        cursor: pointer;
+        opacity: 0.9;
+        display: none;
+        z-index: 10001;
     }
 </style>
 
@@ -432,6 +115,7 @@ function reveal(id) {
     document.getElementById(id).style.display = "block";
 }
 
+// Unlock schedule → every 5 days starting Dec 1
 const unlockDays = {
     1: "page1",
     6: "page2",
@@ -448,7 +132,7 @@ function toggleAdmin() {
     location.reload();
 }
 
-// Fireworks with Hearts
+// Fireworks with hearts
 function startFireworks() {
     const canvas = document.getElementById('fireworksCanvas');
     const ctx = canvas.getContext('2d');
@@ -558,11 +242,12 @@ function startFireworks() {
     animate();
 }
 
+// Start music + fireworks
 function startBirthdayMagic() {
-    document.getElementById("magicOverlay").style.display = "none";
     const audio = document.getElementById("birthdayAudio");
     audio.play();
     startFireworks();
+    document.getElementById("playMagic").style.display = "none";
 }
 
 window.onload = function() {
@@ -574,15 +259,17 @@ window.onload = function() {
 
     for (const unlockDay in unlockDays) {
         let section = document.getElementById(unlockDays[unlockDay]);
-        if (adminMode || (month === 12 && day >= unlockDay)) {
+        let unlockNumber = parseInt(unlockDay); // FIXED: numeric comparison
+        if (adminMode || (month === 12 && day >= unlockNumber)) {
             section.classList.remove("locked");
         } else {
             section.classList.add("locked");
         }
     }
 
+    // Show music button on Dec 30
     if ((month === 12 && day >= 30) || adminMode) {
-        document.getElementById("magicOverlay").style.display = "flex";
+        document.getElementById("playMagic").style.display = "block";
     }
 };
 </script>
@@ -591,16 +278,13 @@ window.onload = function() {
 <body>
 
 <div id="adminToggle" onclick="toggleAdmin()">Admin View</div>
-
-<!-- Overlay to start music/fireworks -->
-<div id="magicOverlay" onclick="startBirthdayMagic()">🎉 Click anywhere to start your birthday magic! 🎶💛</div>
+<button id="playMagic" onclick="startBirthdayMagic()">🎶 Play Birthday Music & Fireworks</button>
+<canvas id="fireworksCanvas"></canvas>
+<audio id="birthdayAudio" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
 
 <h1>Good Morning Mr. Pookie Cookie 💛</h1>
 <p>Your birthday month has officially started…  
 and so has my mission to make you smile every 5 days 😌💛</p>
-
-<audio id="birthdayAudio" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
-<canvas id="fireworksCanvas" class="hidden"></canvas>
 
 <!-- PAGE 1 - Dec 1 -->
 <div id="page1" class="section locked">
@@ -619,14 +303,62 @@ and so has my mission to make you smile every 5 days 😌💛</p>
     <div id="a2" class="hidden">Of course… my sizzling premium steak chooses violence 😏🔥</div>
 </div>
 
-<!-- Other pages remain as before -->
+<!-- PAGE 2 - Dec 6 -->
+<div id="page2" class="section locked">
+    <h2>✨ Day 6</h2>
+    <p>Okay Mr. Pookie Cookie… time to test your detective brain 😏</p>
+    <p><b>RIDDLE:</b> I have four wheels, lots of speed, tiny in size but big in greed. Kids collect me, adults too… name the thing that reminds me of you 😉🔥</p>
+    <div class="option" onclick="reveal('car1')">Your Guess</div>
+    <div id="car1" class="hidden">Interesting… let’s just say your answer tells me what direction your surprise is speeding toward… 😌🔥</div>
+</div>
+
+<!-- PAGE 3 - Dec 11 -->
+<div id="page3" class="section locked">
+    <h2>✨ Day 11</h2>
+    <p>Time for your dinner preference, my edible snack 😏</p>
+    <div class="option-grid">
+        <div class="option" onclick="reveal('r1')">Ktore</div>
+        <div class="option" onclick="reveal('r2')">Astasi</div>
+        <div class="option" onclick="reveal('r3')">Silo</div>
+        <div class="option" onclick="reveal('r4')">Terraza</div>
+    </div>
+    <div id="r1" class="hidden">Spicy choice… like your energy 😏🔥</div>
+    <div id="r2" class="hidden">Classy. Just like how you pretend you’re not my dessert.</div>
+    <div id="r3" class="hidden">Cozy and warm… like your hugs 😌</div>
+    <div id="r4" class="hidden">Rooftop lights + you = dangerous for my heart 💛</div>
+</div>
+
+<!-- PAGE 4 - Dec 16 -->
+<div id="page4" class="section locked">
+    <h2>✨ Day 16</h2>
+    <p>Your next question, Mr. Premium Steak 😏🔥 Choose one:</p>
+    <div class="option" onclick="reveal('g1')">Gift Box</div>
+    <div class="option" onclick="reveal('g2')">Gift Cards</div>
+    <div id="g1" class="hidden">Mmm… bold choice. I hope you’re prepared for what your destiny holds 😏🔥</div>
+    <div id="g2" class="hidden">Soft, sweet, gentle choice… exactly like your morning voice 😌💛</div>
+</div>
+
+<!-- PAGE 5 - Dec 21 -->
+<div id="page5" class="section locked">
+    <h2>✨ Day 21</h2>
+    <p>A tiny tease for your upcoming surprise 😏 But I won’t reveal anything…</p>
+    <p><i>This clue has speed, shine, and curves. Just like you when you walk away from me 😏🔥</i></p>
+</div>
+
+<!-- PAGE 6 - Dec 26 -->
+<div id="page6" class="section locked">
+    <h2>✨ Day 26</h2>
+    <p>We're so close to your birthday, my irresistible snack 😌🔥 Here's your second last question:</p>
+    <div class="option" onclick="reveal('f1')">Something Useful</div>
+    <div class="option" onclick="reveal('f2')">Something Cute</div>
+    <div id="f1" class="hidden">Useful… like how you are for my sanity 😌💛</div>
+    <div id="f2" class="hidden">Cute… like your angry pout 😏💛</div>
+</div>
 
 <!-- FINAL - Dec 30 -->
 <div id="final" class="section locked">
     <h2>🎉 Final Day — Dec 30</h2>
-    <p>Tomorrow is your birthday, my Mr. Pookie Cookie 💛  
-    And I can't wait to spoil you the way you deserve 😌  
-    Your final surprise unlocks at midnight…</p>
+    <p>Tomorrow is your birthday, my Mr. Pookie Cookie 💛 And I can't wait to spoil you the way you deserve 😌</p>
 </div>
 
 </body>
