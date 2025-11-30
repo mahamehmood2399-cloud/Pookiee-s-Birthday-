@@ -3,140 +3,329 @@
 <head>
 <meta charset="UTF-8">
 <title>Hi Mr. Pookie Cookie 💛</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background: #fff6f8;
-        margin: 0;
-        padding: 20px;
-        text-align: center;
-        color: #333;
-    }
-
-    h1 {
-        font-size: 32px;
-        color: #ff4f7b;
-        margin-bottom: 10px;
-    }
-
-    .section {
-        background: white;
-        padding: 20px;
-        margin: 15px auto;
-        border-radius: 18px;
-        width: 92%;
-        max-width: 500px;
-        box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
-    }
-
-    .button, .option {
-        background: #ffd9e6;
-        color: #333;
-        padding: 12px 18px;
-        border-radius: 12px;
-        margin: 10px auto;
-        display: block;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.2s;
-        width: 80%;
-    }
-
-    .option:hover, .button:hover {
-        background: #ffbfd1;
-    }
-
-    .hidden {
-        display: none;
-        margin-top: 15px;
-        background: #ffe6ef;
-        padding: 15px;
-        border-radius: 12px;
-    }
-
-    .option-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
+body {font-family: Arial,sans-serif; background:#fff6f8; margin:0; padding:20px; text-align:center; color:#333;}
+h1{font-size:32px;color:#ff4f7b;margin-bottom:10px;}
+.section{background:white;padding:20px;margin:15px auto;border-radius:18px;width:92%;max-width:500px;box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+.button,.option{background:#ffd9e6;color:#333;padding:12px 18px;border-radius:12px;margin:10px auto;display:block;cursor:pointer;font-weight:bold;transition:.2s;width:80%;}
+.option:hover,.button:hover{background:#ffbfd1;}
+.hidden{display:none;margin-top:15px;background:#ffe6ef;padding:15px;border-radius:12px;}
+.option-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.firework {position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
 </style>
-
-<script>
-function reveal(id) {
-    document.getElementById(id).style.display = "block";
-}
-
-function revealDinner(id) {
-    document.getElementById("d1").style.display = "none";
-    document.getElementById("d2").style.display = "none";
-    document.getElementById("d3").style.display = "none";
-    document.getElementById("d4").style.display = "none";
-    document.getElementById(id).style.display = "block";
-}
-
-function toggle(id) {
-    let el = document.getElementById(id);
-    el.style.display = el.style.display === "block" ? "none" : "block";
-}
-</script>
 </head>
-
 <body>
 
 <h1>Hi Mr. Pookie Cookie 💛</h1>
-<p>Before your birthday comes… here’s a tiny little something for my favourite meal 😌</p>
+<p>Welcome to your 30-day birthday surprise! 🎉 Each day brings a little tease, compliment, or fun question 😌</p>
 
 <div class="section">
-    <h2>🎉 A Birthday Secret</h2>
-    <div class="button" onclick="toggle('secret')">Reveal Secret</div>
-    <div id="secret" class="hidden">
-        <p>I’m planning something special for you… and yes, it includes your favourite:  
-        <b>me teasing you non-stop the entire day 💛</b></p>
-    </div>
+  <h2>Tap to Start</h2>
+  <div class="button" onclick="startFun()">Start Now 💛</div>
 </div>
+
+<div id="dayContainer" class="section hidden">
+  <h2 id="dayTitle"></h2>
+  <p id="dayMessage"></p>
+  <div id="options" class="option-grid"></div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAxrxUO86_bBRWvG7MPPEiplyMZcP_BBaw",
+  authDomain: "mr-pookie-birthday.firebaseapp.com",
+  databaseURL: "https://mr-pookie-birthday-default-rtdb.firebaseio.com",
+  projectId: "mr-pookie-birthday",
+  storageBucket: "mr-pookie-birthday.appspot.com",
+  messagingSenderId: "440258697166",
+  appId: "1:440258697166:web:c561f120ea13d7a234bd9f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
+<script>
+// ===== 30 DAYS DATA =====
+const days=[
+{title:"Day 1: Good Morning, Spicy Beef Steak 😏",message:"You woke up looking irresistible! Ready for teasing?",options:["Yes, tease me!","No, I'm shy 😳"]},
+{title:"Day 2: Sweet Buttery Hottie 🧈🔥",message:"Who's looking more delicious today, you or your Pookie?",options:["Me 😏","Pookie 😌"]},
+{title:"Day 3: Rafaello Vibes 😘",message:"Do I have permission to give you a little birthday nibble today?",options:["Yes! 😋","Not yet 😳"]},
+{title:"Day 4: Strawberry Cheesecake Mood 🍓",message:"Are you craving compliments or teasing today?",options:["Compliments 💛","Teasing 😈"]},
+{title:"Day 5: My Hot Pookie 😏",message:"Rate how adorable you think you are today.",options:["10/10 😎","11/10 😍"]},
+{title:"Day 6: Premium Beef Steak 🥩🔥",message:"Do you want a sweet message or a spicy tease?",options:["Sweet 🍯","Spicy 🌶"]},
+{title:"Day 7: Buttery Pookie 😌",message:"Do I look like your dessert today?",options:["Yes! 😘","Maybe 😳"]},
+{title:"Day 8: My Meal 😏",message:"Which nickname should I call you today?",options:["Spicy Steak 🌶","Pookie Vampire 🧛"]},
+{title:"Day 9: Hottiee 😎",message:"Do you want a secret compliment?",options:["Yes! 💛","No 😳"]},
+{title:"Day 10: Sweet Tooth 😘",message:"Pick your birthday treat today.",options:["Rafaello 🍬","Strawberry Cheesecake 🍓"]},
+{title:"Day 11: Cadbury Vibes 🍫",message:"Do you want teasing or cuddles?",options:["Teasing 😈","Cuddles 😌"]},
+{title:"Day 12: My Pookie 😏",message:"How spicy do you feel today?",options:["Mild 😳","Hot 🔥"]},
+{title:"Day 13: Premium Beef Steak 🥩",message:"Do I get to stare at you like a meal today?",options:["Yes 😏","No 😳"]},
+{title:"Day 14: Buttery Hottie 🧈",message:"Choose your favorite flirty emoji.",options:["😘 😍","😏 😈"]},
+{title:"Day 15: Rafaello Mood 🍬",message:"Do you want a little nibble tease?",options:["Yes! 😋","Maybe 😳"]},
+{title:"Day 16: Strawberry Cheesecake 🍓",message:"Pick a compliment style.",options:["Sweet 💛","Sassy 😏"]},
+{title:"Day 17: My Spicy Meal 🌶",message:"Do you want a flirty GIF today?",options:["Yes! 😍","No 😳"]},
+{title:"Day 18: Pookie Vampire 🧛",message:"Choose your nickname for today.",options:["Hottie 😏","My Meal 😌"]},
+{title:"Day 19: Buttery Steak 🧈🥩",message:"Do you want teasing or compliments?",options:["Teasing 😈","Compliments 💛"]},
+{title:"Day 20: Sweet Premium 😘",message:"Pick your favorite treat.",options:["Rafaello 🍬","Strawberry Cheesecake 🍓"]},
+{title:"Day 21: Cadbury Hottie 🍫",message:"Are you ready for a surprise?",options:["Yes! 😏","Not yet 😳"]},
+{title:"Day 22: My Spicy Pookie 🌶",message:"Do you want a secret message?",options:["Yes! 💛","No 😳"]},
+{title:"Day 23: Hottiee 😎",message:"Choose your nickname today.",options:["Spicy Steak 🌶","Pookie Vampire 🧛"]},
+{title:"Day 24: Premium Beef Steak 🥩🔥",message:"Do you want teasing or compliments?",options:["Teasing 😈","Compliments 💛"]},
+{title:"Day 25: Buttery Sweet 😌",message:"Pick your favorite dessert today.",options:["Rafaello 🍬","Strawberry Cheesecake 🍓"]},
+{title:"Day 26: My Meal 😏",message:"Do you want a flirty GIF today?",options:["Yes! 😍","No 😳"]},
+{title:"Day 27: Spicy Hottie 🌶",message:"Do you want teasing or compliments?",options:["Teasing 😈","Compliments 💛"]},
+{title:"Day 28: Pookie Mood 😘",message:"Choose your nickname for today.",options:["Hottie 😏","My Meal 😌"]},
+{title:"Day 29: Premium Buttery 😌",message:"Do you want a secret compliment?",options:["Yes! 💛","No 😳"]},
+{title:"Day 30: 🎉 Birthday Finale! 🎉",message:"Happy Birthday Hassaan! 💛 You are my Premium Beef Steak, my sweet Pookie Vampire, my hot & buttery treat! Today is all about you! 😘",options:[],special:"fireworks"}
+];
+
+// ===== START FUN =====
+function startFun(){
+  document.querySelector('.section').classList.add('hidden'); 
+  showDay();
+}
+
+// ===== SHOW CURRENT DAY =====
+function showDay(){
+  const now=new Date();
+  const pakistanOffset=5*60; // UTC+5
+  const utc=now.getTime()+now.getTimezoneOffset()*60000;
+  const pakistanTime=new Date(utc+pakistanOffset*60000);
+  const startDate=new Date("2025-12-01T00:00:00+05:00");
+  let dayNumber=Math.floor((pakistanTime - startDate)/(24*60*60*1000))+1;
+  if(dayNumber<=0){document.getElementById("dayContainer").innerHTML="<h2>Patience, my sweet Pookie 😌</h2><p>Your birthday fun starts on December 1!</p>"; document.getElementById("dayContainer").classList.remove("hidden"); return;}
+  if(dayNumber>days.length) dayNumber=days.length;
+  const dayData=days[dayNumber-1];
+  document.getElementById("dayTitle").innerText=dayData.title;
+  document.getElementById("dayMessage").innerText=dayData.message;
+  const optionsDiv=document.getElementById("options");
+  optionsDiv.innerHTML="";
+  dayData.options.forEach(opt=>{
+    const btn=document.createElement("div");
+    btn.className="option";
+    btn.innerText=opt;
+    btn.onclick=()=>{
+      db.ref("responses/day"+dayNumber).push({choice:opt,time:new Date().toISOString()});
+      alert("Choice saved 💛");
+    };
+    optionsDiv.appendChild(btn);
+  });
+  document.getElementById("dayContainer").classList.remove("hidden");
+
+  if(dayData.special==="fireworks"){
+    launchFireworks();
+  }
+}
+
+// ===== FIREWORKS =====
+function launchFireworks(){
+  const fireworks=document.createElement("canvas");
+  fireworks.className="firework";
+  document.body.appendChild(fireworks);
+  const ctx=fireworks.getContext("2d");
+  fireworks.width=window.innerWidth;
+  fireworks.height=window.innerHeight;
+  let particles=[];
+  function createParticles(x,y){
+    for(let i=0;i<50;i++){
+      particles.push({
+        x:x,
+        y:y,
+        vx:(Math.random()-0.5)*5,
+        vy:(Math.random()-2.5)*5,
+        alpha:1,
+        color:`hsl(${Math.random()*360},100%,50%)`
+      });
+    }
+  }
+  function animate(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,fireworks.width,fireworks.height);
+    particles.forEach((p,index)=>{
+      p.x+=p.vx; p.y+=p.vy; p.alpha-=0.01;
+      ctx.fillStyle=p.color;
+      ctx.globalAlpha=p.alpha;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fill();
+      if(p.alpha<=0) particles.splice(index,1);
+    });
+    if(particles.length>0) requestAnimationFrame(animate);
+  }
+  fireworks.addEventListener("click",(e)=>{createParticles(e.clientX,e.clientY);});
+  for(let i=0;i<5;i++){createParticles(Math.random()*fireworks.width,Math.random()*fireworks.height);}
+  animate();
+}
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hi Mr. Pookie Cookie 💛</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {font-family: Arial,sans-serif; background:#fff6f8; margin:0; padding:20px; text-align:center; color:#333;}
+h1{font-size:32px;color:#ff4f7b;margin-bottom:10px;}
+.section{background:white;padding:20px;margin:15px auto;border-radius:18px;width:92%;max-width:500px;box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+.button,.option{background:#ffd9e6;color:#333;padding:12px 18px;border-radius:12px;margin:10px auto;display:block;cursor:pointer;font-weight:bold;transition:.2s;width:80%;}
+.option:hover,.button:hover{background:#ffbfd1;}
+.hidden{display:none;margin-top:15px;background:#ffe6ef;padding:15px;border-radius:12px;}
+.option-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.firework {position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<h1>Hi Mr. Pookie Cookie 💛</h1>
+<p>Welcome to your 30-day birthday surprise! 🎉 Each day brings a little tease, compliment, or fun question 😌</p>
 
 <div class="section">
-    <h2>🎁 Choose Your Birthday Gift</h2>
-    <div class="option-grid">
-        <div class="option" onclick="reveal('gift1')">Gift Box</div>
-        <div class="option" onclick="reveal('gift2')">Gift Cards</div>
-    </div>
-    <div id="gift1" class="hidden">
-        <p>Ooooh, the Gift Box? Someone’s feeling adventurous 👀  
-        Hope you're ready, Mr. Hot & Sexy Steak 🍖🔥</p>
-    </div>
-    <div id="gift2" class="hidden">
-        <p>Gift Cards? Going for the soft buttery Rafaello mood today? 😌  
-        My sweet & classy Pookie Vampire 😏</p>
-    </div>
+  <h2>Tap to Start</h2>
+  <div class="button" onclick="startFun()">Start Now 💛</div>
 </div>
 
-<div class="section">
-    <h2>🍽 Choose Your Birthday Dinner Spot</h2>
-    <p>Your choices, my edible little Cadbury treat 😌👇</p>
-    <div class="option-grid">
-        <div class="option" onclick="revealDinner('d1')">Ktore</div>
-        <div class="option" onclick="revealDinner('d2')">Astasi</div>
-        <div class="option" onclick="revealDinner('d3')">Silo</div>
-        <div class="option" onclick="revealDinner('d4')">Terraza</div>
-    </div>
-    <div id="d1" class="hidden">
-        <p>Ktore? Bold & spicy — just like you.  
-        No promises about me not staring at you like you're a whole meal.</p>
-    </div>
-    <div id="d2" class="hidden">
-        <p>Astasi? Fancy taste, Mr. Premium Beef Steak 😏  
-        You’re the real dessert.</p>
-    </div>
-    <div id="d3" class="hidden">
-        <p>Silo? Cozy & warm — matching your buttery vibes.  
-        I might tease your cute walk though.</p>
-    </div>
-    <div id="d4" class="hidden">
-        <p>Terraza? Rooftop lights & you looking all edible.  
-        I will stare. A lot.</p>
-    </div>
+<div id="dayContainer" class="section hidden">
+  <h2 id="dayTitle"></h2>
+  <p id="dayMessage"></p>
+  <div id="options" class="option-grid"></div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAxrxUO86_bBRWvG7MPPEiplyMZcP_BBaw",
+  authDomain: "mr-pookie-birthday.firebaseapp.com",
+  databaseURL: "https://mr-pookie-birthday-default-rtdb.firebaseio.com",
+  projectId: "mr-pookie-birthday",
+  storageBucket: "mr-pookie-birthday.appspot.com",
+  messagingSenderId: "440258697166",
+  appId: "1:440258697166:web:c561f120ea13d7a234bd9f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
+<script>
+// ===== 30 DAYS DATA =====
+const days=[
+{title:"Day 1: Good Morning, Spicy Beef Steak 😏",message:"You woke up looking irresistible! Ready for teasing?",options:["Yes, tease me!","No, I'm shy 😳"]},
+{title:"Day 2: Sweet Buttery Hottie 🧈🔥",message:"Who's looking more delicious today, you or your Pookie?",options:["Me 😏","Pookie 😌"]},
+{title:"Day 3: Rafaello Vibes 😘",message:"Do I have permission to give you a little birthday nibble today?",options:["Yes! 😋","Not yet 😳"]},
+{title:"Day 4: Strawberry Cheesecake Mood 🍓",message:"Are you craving compliments or teasing today?",options:["Compliments 💛","Teasing 😈"]},
+{title:"Day 5: My Hot Pookie 😏",message:"Rate how adorable you think you are today.",options:["10/10 😎","11/10 😍"]},
+{title:"Day 6: Premium Beef Steak 🥩🔥",message:"Do you want a sweet message or a spicy tease?",options:["Sweet 🍯","Spicy 🌶"]},
+{title:"Day 7: Buttery Pookie 😌",message:"Do I look like your dessert today?",options:["Yes! 😘","Maybe 😳"]},
+{title:"Day 8: My Meal 😏",message:"Which nickname should I call you today?",options:["Spicy Steak 🌶","Pookie Vampire 🧛"]},
+{title:"Day 9: Hottiee 😎",message:"Do you want a secret compliment?",options:["Yes! 💛","No 😳"]},
+{title:"Day 10: Sweet Tooth 😘",message:"Pick your birthday treat today.",options:["Rafaello 🍬","Strawberry Cheesecake 🍓"]},
+{title:"Day 11: Cadbury Vibes 🍫",message:"Do you want teasing or cuddles?",options:["Teasing 😈","Cuddles 😌"]},
+{title:"Day 12: My Pookie 😏",message:"How spicy do you feel today?",options:["Mild 😳","Hot 🔥"]},
+{title:"Day 13: Premium Beef Steak 🥩",message:"Do I get to stare at you like a meal today?",options:["Yes 😏","No 😳"]},
+{title:"Day 14: Buttery Hottie 🧈",message:"Choose your favorite flirty emoji.",options:["😘 😍","😏 😈"]},
+{title:"Day 15: Rafaello Mood 🍬",message:"Do you want a little nibble tease?",options:["Yes! 😋","Maybe 😳"]},
+{title:"Day 16: Strawberry Cheesecake 🍓",message:"Pick a compliment style.",options:["Sweet 💛","Sassy 😏"]},
+{title:"Day 17: My Spicy Meal 🌶",message:"Do you want a flirty GIF today?",options:["Yes! 😍","No 😳"]},
+{title:"Day 18: Pookie Vampire 🧛",message:"Choose your nickname for today.",options:["Hottie 😏","My Meal 😌"]},
+{title:"Day 19: Buttery Steak 🧈🥩",message:"Do you want teasing or compliments?",options:["Teasing 😈","Compliments 💛"]},
+{title:"Day 20: Sweet Premium 😘",message:"Pick your favorite treat.",options:["Rafaello 🍬","Strawberry Cheesecake 🍓"]},
+{title:"Day 21: Cadbury Hottie 🍫",message:"Are you ready for a surprise?",options:["Yes! 😏","Not yet 😳"]},
+{title:"Day 22: My Spicy Pookie 🌶",message:"Do you want a secret message?",options:["Yes! 💛","No 😳"]},
+{title:"Day 23: Hottiee 😎",message:"Choose your nickname today.",options:["Spicy Steak 🌶","Pookie Vampire 🧛"]},
+{title:"Day 24: Premium Beef Steak 🥩🔥",message:"Do you want teasing or compliments?",options:["Teasing 😈","Compliments 💛"]},
+{title:"Day 25: Buttery Sweet 😌",message:"Pick your favorite dessert today.",options:["Rafaello 🍬","Strawberry Cheesecake 🍓"]},
+{title:"Day 26: My Meal 😏",message:"Do you want a flirty GIF today?",options:["Yes! 😍","No 😳"]},
+{title:"Day 27: Spicy Hottie 🌶",message:"Do you want teasing or compliments?",options:["Teasing 😈","Compliments 💛"]},
+{title:"Day 28: Pookie Mood 😘",message:"Choose your nickname for today.",options:["Hottie 😏","My Meal 😌"]},
+{title:"Day 29: Premium Buttery 😌",message:"Do you want a secret compliment?",options:["Yes! 💛","No 😳"]},
+{title:"Day 30: 🎉 Birthday Finale! 🎉",message:"Happy Birthday Hassaan! 💛 You are my Premium Beef Steak, my sweet Pookie Vampire, my hot & buttery treat! Today is all about you! 😘",options:[],special:"fireworks"}
+];
+
+// ===== START FUN =====
+function startFun(){
+  document.querySelector('.section').classList.add('hidden'); 
+  showDay();
+}
+
+// ===== SHOW CURRENT DAY =====
+function showDay(){
+  const now=new Date();
+  const pakistanOffset=5*60; // UTC+5
+  const utc=now.getTime()+now.getTimezoneOffset()*60000;
+  const pakistanTime=new Date(utc+pakistanOffset*60000);
+  const startDate=new Date("2025-12-01T00:00:00+05:00");
+  let dayNumber=Math.floor((pakistanTime - startDate)/(24*60*60*1000))+1;
+  if(dayNumber<=0){document.getElementById("dayContainer").innerHTML="<h2>Patience, my sweet Pookie 😌</h2><p>Your birthday fun starts on December 1!</p>"; document.getElementById("dayContainer").classList.remove("hidden"); return;}
+  if(dayNumber>days.length) dayNumber=days.length;
+  const dayData=days[dayNumber-1];
+  document.getElementById("dayTitle").innerText=dayData.title;
+  document.getElementById("dayMessage").innerText=dayData.message;
+  const optionsDiv=document.getElementById("options");
+  optionsDiv.innerHTML="";
+  dayData.options.forEach(opt=>{
+    const btn=document.createElement("div");
+    btn.className="option";
+    btn.innerText=opt;
+    btn.onclick=()=>{
+      db.ref("responses/day"+dayNumber).push({choice:opt,time:new Date().toISOString()});
+      alert("Choice saved 💛");
+    };
+    optionsDiv.appendChild(btn);
+  });
+  document.getElementById("dayContainer").classList.remove("hidden");
+
+  if(dayData.special==="fireworks"){
+    launchFireworks();
+  }
+}
+
+// ===== FIREWORKS =====
+function launchFireworks(){
+  const fireworks=document.createElement("canvas");
+  fireworks.className="firework";
+  document.body.appendChild(fireworks);
+  const ctx=fireworks.getContext("2d");
+  fireworks.width=window.innerWidth;
+  fireworks.height=window.innerHeight;
+  let particles=[];
+  function createParticles(x,y){
+    for(let i=0;i<50;i++){
+      particles.push({
+        x:x,
+        y:y,
+        vx:(Math.random()-0.5)*5,
+        vy:(Math.random()-2.5)*5,
+        alpha:1,
+        color:`hsl(${Math.random()*360},100%,50%)`
+      });
+    }
+  }
+  function animate(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,fireworks.width,fireworks.height);
+    particles.forEach((p,index)=>{
+      p.x+=p.vx; p.y+=p.vy; p.alpha-=0.01;
+      ctx.fillStyle=p.color;
+      ctx.globalAlpha=p.alpha;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fill();
+      if(p.alpha<=0) particles.splice(index,1);
+    });
+    if(particles.length>0) requestAnimationFrame(animate);
+  }
+  fireworks.addEventListener("click",(e)=>{createParticles(e.clientX,e.clientY);});
+  for(let i=0;i<5;i++){createParticles(Math.random()*fireworks.width,Math.random()*fireworks.height);}
+  animate();
+}
+</script>
 </body>
 </html>
